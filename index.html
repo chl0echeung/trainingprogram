@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#15181c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ascent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Ascent — 16-Week Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rock:#15181c;
+  --rock-2:#1d2228;
+  --rock-3:#272d35;
+  --line:#333b44;
+  --granite:#e7e4dc;
+  --mist:#8b939c;
+  --mist-2:#5d656e;
+  --marker:#e8743b;
+  --marker-soft:rgba(232,116,59,.14);
+  --teal:#5fb3a3;
+  --good:#5fb3a3;
+  --warn:#e8743b;
+  --r:14px;
+  --display:'Space Grotesk',system-ui,sans-serif;
+  --body:'Inter',system-ui,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,monospace;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--rock);color:var(--granite);font-family:var(--body);
+  font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea{font-family:var(--mono);font-size:14px}
+::selection{background:var(--marker-soft)}
+
+/* ---------- App shell ---------- */
+#app{max-width:520px;margin:0 auto;min-height:100%;position:relative;padding-bottom:calc(70px + var(--safe-b))}
+.view{display:none;animation:fade .25s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- Topographic header ---------- */
+.ridge-wrap{position:relative;padding:calc(14px + var(--safe-t)) 18px 0}
+.ridge-eyebrow{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist-2)}
+.ridge-eyebrow b{color:var(--marker);font-weight:600}
+.ridge-svg{display:block;width:100%;height:86px;margin-top:6px;overflow:visible}
+.wk-title{display:flex;align-items:baseline;gap:10px;margin-top:2px}
+.wk-num{font-family:var(--display);font-weight:700;font-size:46px;line-height:.9;letter-spacing:-.02em}
+.wk-block{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mist);padding:4px 8px;border:1px solid var(--line);border-radius:20px}
+.wk-block.deload{color:var(--marker);border-color:rgba(232,116,59,.4)}
+.wk-goal{color:var(--mist);font-size:13.5px;margin-top:7px;font-style:italic}
+
+/* week chips */
+.chips{display:flex;gap:7px;overflow-x:auto;padding:14px 18px 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+  background:var(--rock-2);font-family:var(--mono);font-size:13px;color:var(--mist);
+  display:flex;align-items:center;justify-content:center;position:relative}
+.chip.cur{background:var(--marker);color:#fff;border-color:var(--marker);font-weight:600}
+.chip.today-ring{box-shadow:0 0 0 2px var(--rock),0 0 0 3px var(--teal)}
+.chip .notch{position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:5px;height:5px;
+  border-radius:50%;background:var(--mist-2)}
+.chip.cur .notch{background:#fff}
+
+/* this-week stat row */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 18px 4px}
+.stat{background:var(--rock-2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mist-2)}
+.stat .v{font-size:13.5px;margin-top:3px;color:var(--granite);line-height:1.35}
+.stat.wide{grid-column:1/3}
+
+/* banners */
+.banner{margin:12px 18px 0;border-radius:12px;padding:11px 14px;font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
+.banner.deload{background:var(--marker-soft);border:1px solid rgba(232,116,59,.35);color:#f0b48f}
+.banner.bench{background:rgba(95,179,163,.12);border:1px solid rgba(95,179,163,.35);color:#9bd3c8}
+.banner .ic{flex:0 0 auto;margin-top:1px}
+
+/* section label */
+.slabel{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mist-2);padding:22px 18px 8px;display:flex;justify-content:space-between;align-items:center}
+
+/* day cards */
+.day{margin:0 18px 8px;background:var(--rock-2);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px;display:flex;align-items:center;gap:13px;width:calc(100% - 36px);text-align:left}
+.day:active{transform:scale(.99)}
+.day .dow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--mist-2);
+  width:30px;flex:0 0 auto;text-transform:uppercase}
+.day .body{flex:1;min-width:0}
+.day .type{display:block;font-family:var(--display);font-weight:600;font-size:15.5px}
+.day .sub{display:block;font-size:12.5px;color:var(--mist);margin-top:2px}
+.day.today{border-color:var(--marker);background:linear-gradient(180deg,var(--marker-soft),var(--rock-2))}
+.day.rest{opacity:.62}
+.day .prog{font-family:var(--mono);font-size:12px;color:var(--mist);flex:0 0 auto}
+.day .prog.done{color:var(--good)}
+.dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.dot.strength{background:var(--marker)}
+.dot.climb{background:var(--teal)}
+.dot.hike{background:#c8a24a}
+.dot.rest{background:var(--mist-2)}
+
+/* hangboard surface card */
+.hb-card{margin:6px 18px 0;background:linear-gradient(180deg,rgba(95,179,163,.1),var(--rock-2));
+  border:1px solid rgba(95,179,163,.3);border-radius:var(--r);padding:14px;width:calc(100% - 36px);text-align:left;display:flex;gap:12px;align-items:center}
+.hb-card .type{display:block;font-family:var(--display);font-weight:600;font-size:15px}
+.hb-card .sub{display:block;font-size:12.5px;color:var(--mist);margin-top:2px}
+
+/* ---------- Plan view ---------- */
+.plan-hd{padding:calc(20px + var(--safe-t)) 18px 4px}
+.plan-hd h1{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.01em}
+.plan-hd p{color:var(--mist);font-size:13.5px;margin-top:4px}
+.bigridge{margin:8px 18px 0;background:var(--rock-2);border:1px solid var(--line);border-radius:var(--r);padding:16px 12px 8px}
+.block{margin:14px 18px 0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.block-hd{padding:13px 15px;background:var(--rock-2);display:flex;justify-content:space-between;align-items:center}
+.block-hd .nm{font-family:var(--display);font-weight:600;font-size:15px}
+.block-hd .wks{font-family:var(--mono);font-size:11px;color:var(--mist);letter-spacing:.08em}
+.block-goal{padding:11px 15px;font-size:13px;color:var(--mist);border-top:1px solid var(--line)}
+.miniwk{padding:11px 15px;border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;width:100%;text-align:left}
+.miniwk:active{background:var(--rock-3)}
+.miniwk .w{font-family:var(--mono);font-size:12px;color:var(--marker);width:26px;flex:0 0 auto}
+.miniwk .d{font-size:12.5px;color:var(--granite)}
+.miniwk.dl .w{color:#f0b48f}
+.miniwk .tag{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mist-2);border:1px solid var(--line);border-radius:20px;padding:2px 7px}
+
+/* ---------- Info & Log shared ---------- */
+.doc{padding:calc(20px + var(--safe-t)) 18px 8px}
+.doc h1{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.01em}
+.doc>p{color:var(--mist);font-size:13.5px;margin-top:4px}
+.acc{margin:10px 18px 0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--rock-2)}
+.acc-hd{padding:14px 15px;display:flex;align-items:center;gap:11px;width:100%;text-align:left}
+.acc-hd .ttl{font-family:var(--display);font-weight:600;font-size:14.5px;flex:1}
+.acc-hd .chev{color:var(--mist-2);transition:transform .2s}
+.acc.open .acc-hd .chev{transform:rotate(90deg)}
+.acc-body{display:none;padding:0 15px 14px;font-size:13.5px;color:#c8cdd3}
+.acc.open .acc-body{display:block}
+.acc-body ul{list-style:none;margin-top:2px}
+.acc-body li{padding:6px 0 6px 16px;position:relative;border-top:1px solid var(--line)}
+.acc-body li:first-child{border-top:none}
+.acc-body li::before{content:"";position:absolute;left:2px;top:13px;width:5px;height:5px;border-radius:50%;background:var(--marker)}
+.acc-body li.danger::before{background:#e8743b}
+.acc-body .lead{display:block;color:var(--granite);font-weight:600;font-family:var(--display)}
+.callout{background:var(--marker-soft);border:1px solid rgba(232,116,59,.35);border-radius:10px;padding:10px 12px;margin-top:10px;color:#f0b48f;font-size:13px}
+.icon-emoji{font-size:16px;flex:0 0 auto}
+
+/* benchmark log */
+.bench-card{margin:12px 18px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--rock-2);overflow:hidden}
+.bench-hd{padding:13px 15px;display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left}
+.bench-hd .w{font-family:var(--display);font-weight:600;font-size:15px}
+.bench-hd .st{font-family:var(--mono);font-size:11px;color:var(--mist)}
+.bench-hd .st.done{color:var(--good)}
+.bench-body{display:none;border-top:1px solid var(--line);padding:6px 15px 14px}
+.bench-card.open .bench-body{display:block}
+.bfield{padding:10px 0;border-top:1px solid var(--line)}
+.bfield:first-child{border-top:none}
+.bfield label{display:block;font-size:12.5px;color:var(--mist);margin-bottom:6px}
+.bfield label b{color:var(--granite);font-family:var(--display);font-size:13px}
+.bfield input{width:100%;background:var(--rock);border:1px solid var(--line);border-radius:9px;
+  padding:9px 11px;color:var(--granite)}
+.bfield input:focus{outline:none;border-color:var(--marker)}
+
+/* ---------- Bottom nav ---------- */
+.tabbar{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;
+  background:rgba(21,24,28,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);display:flex;padding:8px 8px calc(8px + var(--safe-b));z-index:40}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;color:var(--mist-2)}
+.tab.active{color:var(--marker)}
+.tab svg{width:22px;height:22px}
+.tab span{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase}
+
+/* ---------- Session sheet ---------- */
+.sheet-scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;z-index:51;
+  background:var(--rock);border-radius:20px 20px 0 0;max-height:94vh;display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);border-top:1px solid var(--line)}
+.sheet.show{transform:translateY(0)}
+.sheet-grab{width:38px;height:4px;border-radius:4px;background:var(--line);margin:10px auto 0;flex:0 0 auto}
+.sheet-hd{padding:10px 18px 14px;border-bottom:1px solid var(--line);flex:0 0 auto;display:flex;align-items:flex-start;gap:12px}
+.sheet-hd .meta{flex:1;min-width:0}
+.sheet-hd .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--marker)}
+.sheet-hd h2{font-family:var(--display);font-weight:700;font-size:21px;margin-top:3px;letter-spacing:-.01em}
+.sheet-hd .x{flex:0 0 auto;width:32px;height:32px;border-radius:50%;background:var(--rock-2);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--mist);font-size:18px}
+.sheet-scroll{overflow-y:auto;padding:14px 18px calc(120px + var(--safe-b));-webkit-overflow-scrolling:touch}
+
+.subhd{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist-2);margin:18px 0 9px}
+.subhd:first-child{margin-top:2px}
+
+/* warm-up / simple checklist */
+.check{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line);width:100%;text-align:left}
+.check:first-of-type{border-top:none}
+.box{flex:0 0 auto;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line);margin-top:1px;
+  display:flex;align-items:center;justify-content:center;transition:.15s}
+.check.on .box{background:var(--marker);border-color:var(--marker)}
+.box svg{width:13px;height:13px;opacity:0;transition:.15s}
+.check.on .box svg{opacity:1}
+.check .txt{flex:1;font-size:14px}
+.check.on .txt{color:var(--mist)}
+.check .txt .reps{font-family:var(--mono);font-size:12.5px;color:var(--marker);margin-left:2px}
+.check.on .txt .reps{color:var(--mist-2)}
+
+/* exercise card */
+.ex{border:1px solid var(--line);border-radius:12px;margin-bottom:9px;overflow:hidden;background:var(--rock-2)}
+.ex.on{border-color:rgba(232,116,59,.3)}
+.ex-top{display:flex;gap:12px;align-items:flex-start;padding:13px 13px;width:100%;text-align:left}
+.ex .box{margin-top:2px}
+.ex-main{flex:1;min-width:0}
+.ex .code{font-family:var(--mono);font-size:10.5px;color:var(--mist-2);letter-spacing:.08em}
+.ex .nm{font-family:var(--display);font-weight:600;font-size:15px;margin-top:1px}
+.ex.on .nm{color:var(--mist)}
+.ex .nm .badge{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--teal);
+  border:1px solid rgba(95,179,163,.4);border-radius:20px;padding:1px 6px;margin-left:6px;vertical-align:middle;text-transform:uppercase}
+.ex-spec{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.spec{font-family:var(--mono);font-size:11.5px;background:var(--rock-3);border-radius:6px;padding:3px 8px;color:#c8cdd3}
+.spec.rest-btn{color:var(--teal);border:1px solid rgba(95,179,163,.3)}
+.ex-more{padding:0 13px 13px 47px;font-size:13px;color:var(--mist)}
+.ex-more .row{margin-top:8px}
+.ex-more .row b{color:#c8cdd3;font-family:var(--display);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.loginput{width:100%;margin-top:12px;background:var(--rock);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--granite)}
+.loginput:focus{outline:none;border-color:var(--marker)}
+.loglbl{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mist-2);margin-top:12px}
+
+.prose{font-size:14px;color:#c8cdd3}
+.prose p{margin-top:9px}
+.prose b{color:var(--granite)}
+
+/* complete button (sticky in sheet) */
+.sheet-foot{position:absolute;left:0;right:0;bottom:0;padding:12px 18px calc(14px + var(--safe-b));
+  background:linear-gradient(180deg,transparent,var(--rock) 28%);pointer-events:none}
+.complete-btn{pointer-events:auto;width:100%;padding:15px;border-radius:13px;background:var(--marker);color:#fff;
+  font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.01em}
+.complete-btn.done{background:var(--rock-2);border:1px solid var(--good);color:var(--good)}
+
+/* rest timer bar */
+.timer{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(82px + var(--safe-b));
+  z-index:60;background:var(--rock-2);border:1px solid var(--teal);border-radius:30px;padding:9px 10px 9px 18px;
+  display:flex;align-items:center;gap:13px;box-shadow:0 8px 30px rgba(0,0,0,.4);
+  visibility:hidden;opacity:0;transition:transform .3s,opacity .25s,visibility .25s}
+.timer.show{transform:translateX(-50%) translateY(0);visibility:visible;opacity:1}
+.timer .t{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--teal);min-width:46px;text-align:center}
+.timer .lbl{font-size:11px;color:var(--mist);font-family:var(--mono);letter-spacing:.08em}
+.timer .stop{width:30px;height:30px;border-radius:50%;background:var(--rock-3);display:flex;align-items:center;justify-content:center;color:var(--mist)}
+
+/* start-date prompt */
+.setup{margin:14px 18px 0;background:var(--rock-2);border:1px dashed var(--line);border-radius:var(--r);padding:15px}
+.setup p{font-size:13px;color:var(--mist);margin-bottom:10px}
+.setup .row{display:flex;gap:9px}
+.setup input{flex:1;background:var(--rock);border:1px solid var(--line);border-radius:9px;padding:10px;color:var(--granite)}
+.setup button{background:var(--marker);color:#fff;border-radius:9px;padding:10px 16px;font-family:var(--display);font-weight:600}
+
+.foot-note{text-align:center;color:var(--mist-2);font-size:11px;padding:26px 30px 10px;line-height:1.6}
+.foot-note button{color:var(--mist);text-decoration:underline;font-size:11px}
+.backup-row{display:flex;gap:9px;justify-content:center;margin:20px 18px 0}
+.backup-btn{flex:1;max-width:170px;background:var(--rock-2);border:1px solid var(--line);border-radius:11px;
+  padding:12px 10px;color:var(--granite);font-family:var(--display);font-weight:600;font-size:13.5px;
+  display:flex;align-items:center;justify-content:center;gap:7px}
+.backup-btn:active{background:var(--rock-3)}
+.backup-btn svg{width:16px;height:16px;stroke:var(--marker)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- TODAY -->
+  <section class="view active" id="view-today"></section>
+  <!-- PLAN -->
+  <section class="view" id="view-plan"></section>
+  <!-- LOG -->
+  <section class="view" id="view-log"></section>
+  <!-- INFO -->
+  <section class="view" id="view-info"></section>
+</div>
+
+<!-- Session sheet -->
+<div class="sheet-scrim" id="scrim" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grab"></div>
+  <div class="sheet-hd">
+    <div class="meta"><div class="kicker" id="sheetKicker"></div><h2 id="sheetTitle"></h2></div>
+    <button class="x" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="sheet-scroll" id="sheetBody"></div>
+  <div class="sheet-foot"><button class="complete-btn" id="completeBtn"></button></div>
+</div>
+
+<!-- Rest timer -->
+<div class="timer" id="timer">
+  <div class="t" id="timerT">0:00</div>
+  <div class="lbl">REST</div>
+  <button class="stop" onclick="stopTimer()">✕</button>
+</div>
+
+<!-- hidden import picker -->
+<input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(this)">
+
+<!-- Bottom nav -->
+<nav class="tabbar">
+  <button class="tab active" data-tab="today" onclick="go('today')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20l5-9 4 5 3-7 6 11z"/></svg><span>Today</span></button>
+  <button class="tab" data-tab="plan" onclick="go('plan')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Plan</span></button>
+  <button class="tab" data-tab="log" onclick="go('log')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Log</span></button>
+  <button class="tab" data-tab="info" onclick="go('info')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>Info</span></button>
+</nav>
+
+<script>
+/* =========================================================
+   PROGRAM DATA  (transcribed from the 16-week export)
+   ========================================================= */
+const CHECK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>';
+
+const WEEKS=[
+ {n:1, block:"Foundation", deload:false, load:"Light · RPE 5–6 · learn tempo", climb:"Volume / technique · no max", hike:"Walk 2–2.5 hr, no pack", hangboard:"—", checkin:"Baseline benchmark", intensity:5.5},
+ {n:2, block:"Foundation", deload:false, load:"Light–moderate · RPE 6", climb:"Volume / technique", hike:"Walk 2.5–3 hr", hangboard:"—", checkin:"", intensity:6},
+ {n:3, block:"Foundation", deload:false, load:"Moderate · RPE 6–7", climb:"Volume / technique", hike:"Walk 3–4 hr", hangboard:"—", checkin:"", intensity:6.5},
+ {n:4, block:"Foundation", deload:true, kind:"Deload", load:"~50% sets / load", climb:"Easy volume only", hike:"Easy 2 hr", hangboard:"—", checkin:"End-Block-1 benchmark", intensity:3},
+ {n:5, block:"Build", deload:false, load:"Add load · RPE 7", climb:"Reintroduce moderate intensity", hike:"Walk 3–4 hr + 6 kg pack", hangboard:"—", checkin:"", intensity:7},
+ {n:6, block:"Build", deload:false, load:"Add load · RPE 7", climb:"Phase hard moves in (lock-offs / crimps / dynos)", hike:"+ 8 kg pack", hangboard:"—", checkin:"", intensity:7},
+ {n:7, block:"Build", deload:false, load:"Add load · RPE 7–8", climb:"Hard moves continued", hike:"+ 8–10 kg pack", hangboard:"—", checkin:"", intensity:7.5},
+ {n:8, block:"Build", deload:true, kind:"Deload", load:"~50% sets / load", climb:"Easy volume only", hike:"Easy + light pack", hangboard:"—", checkin:"End-Block-2 benchmark + mid-program reassessment", intensity:3},
+ {n:9, block:"Transfer", deload:false, load:"Heavier hinge · RPE 8", climb:"Project intent", hike:"Add descent / rough terrain, 10 kg", hangboard:"Start no-hangs (if gate met)", checkin:"Check hangboard gate", intensity:8},
+ {n:10, block:"Transfer", deload:false, load:"Heavy · RPE 8", climb:"Project intent", hike:"+ descent, 10–12 kg", hangboard:"No-hangs 2–3×/wk", checkin:"", intensity:8},
+ {n:11, block:"Transfer", deload:false, load:"Heavy · RPE 8", climb:"Project intent", hike:"+ descent, 12 kg", hangboard:"No-hangs", checkin:"", intensity:8},
+ {n:12, block:"Transfer", deload:true, kind:"Deload", load:"~50% sets / load", climb:"Easy volume only", hike:"Easy + moderate pack", hangboard:"No-hangs light", checkin:"End-Block-3a benchmark", intensity:3},
+ {n:13, block:"Peak", deload:false, load:"Peak load · RPE 8–9", climb:"Peak intent", hike:"Long loaded descent, 12–14 kg", hangboard:"Progress to repeaters / max hangs if shoulder settled", checkin:"", intensity:8.5},
+ {n:14, block:"Peak", deload:false, load:"Peak load · RPE 8–9", climb:"Peak intent", hike:"Long descent, 14 kg", hangboard:"Hangs 2×/wk", checkin:"", intensity:8.5},
+ {n:15, block:"Peak", deload:false, load:"Peak load · RPE 8", climb:"Peak intent", hike:"Longest loaded descent, 14 kg", hangboard:"Hangs 2×/wk", checkin:"", intensity:8},
+ {n:16, block:"Taper", deload:true, kind:"Taper", load:"Volume −40–50% · keep some intensity", climb:"Light, sharp, fresh", hike:"Short / easy, gear check", hangboard:"Light / optional", checkin:"Final benchmark", intensity:4},
+];
+
+const BLOCKS=[
+ {nm:"Block 1 — Foundation", wks:"Weeks 1–4", weeks:[1,2,3,4], goal:"Groove movement patterns, settle shoulder & neck, build a base. Lighter loads, higher reps, slow tempo. Climbing is volume & technique — no max effort."},
+ {nm:"Block 2 — Build", wks:"Weeks 5–8", weeks:[5,6,7,8], goal:"Add strength and intensity. Progressively load squat / step-up / RDL / row. Phase hard climbing moves back in from ~Wk 6. Light pack walks begin."},
+ {nm:"Block 3a — Transfer", wks:"Weeks 9–12", weeks:[9,10,11,12], goal:"Make it sport-specific. Heavier hinge, pack-loaded knee work, loaded step-ups. Project-grade climbing intent. Start hangboard no-hangs. Loaded descents + rough terrain toward 14 kg."},
+ {nm:"Block 3b — Peak / Taper", wks:"Weeks 13–16", weeks:[13,14,15,16], goal:"Peak loads & intent in Wk 13–15, then taper in Wk 16. Progress hangboard to hangs if the shoulder stays settled. Longest loaded descents."},
+];
+
+const DAYS=[
+ {dow:"Mon", session:"SESSION_A", type:"strength"},
+ {dow:"Tue", session:"CLIMB_POWER", type:"climb"},
+ {dow:"Wed", session:"MOBILITY", type:"rest", extra:"HIKE_DURABILITY"},
+ {dow:"Thu", session:"SESSION_B", type:"strength"},
+ {dow:"Fri", session:"MOBILITY", type:"rest", restLabel:"Rest · mobility optional"},
+ {dow:"Sat", session:"CLIMB_ENDURANCE", type:"climb"},
+ {dow:"Sun", session:"HIKE_WALK", type:"hike"},
+];
+
+const SESSIONS={
+ SESSION_A:{
+  kind:"strength", title:"Strength A", sub:"Lower · posterior chain · core · neck",
+  warmup:["Cat–cow + thoracic rotations — 6–8 slow reps each","Band pull-aparts — 2 × 15","Chin nods (deep neck flexor) — 8 reps, 3–5 s gentle holds · physio-cleared","Banded lateral walks — 2 × 10 steps each way"],
+  main:[
+   {code:"A1", nm:"Goblet squat (KB/DB)", spec:["3 × 8–10","90–120 s","3 s ecc."], cues:"Knee tracks over 2nd toe. Keep depth pain-free while the knee is irritable.", prog:"Block 1 light; add load each week in Block 2–3. On a Block 2–3 hiking-focus day, swap for Loaded step-up (A1b)."},
+   {code:"A1b", nm:"Loaded step-up (knee-height box)", badge:"hike swap", spec:["3 × 8 ea","90 s","control down"], cues:"Drive through the heel; control the lowering; no knee cave.", prog:"Introduced Block 2. Bodyweight → add pack/DB through Block 3. The alpine big-step."},
+   {code:"A2", nm:"Eccentric step-down", spec:["3 × 6–8 ea","60–90 s","3–4 s lower"], cues:"Knee over 2nd toe — no inward cave. Primary descent exercise.", prog:"Box height 10 → 20 → 30 cm (Blk 1→2→3) → then add load → then controlled speed."},
+   {code:"A3", nm:"Lateral step-down / skater", spec:["2–3 × 8 ea","60 s","controlled"], cues:"Multi-planar; control side-to-side, no cave.", prog:"Add range / load as tolerated."},
+   {code:"A4", nm:"RDL → single-leg RDL", spec:["3 × 8–10","90–120 s","2–3 s ecc."], cues:"Flat back, hips back, feel the hamstrings. Single-leg adds balance.", prog:"Add load in Block 2; transition toward single-leg in Block 3."},
+   {code:"A5", nm:"Eccentric calf raise (straight + bent knee)", spec:["3 × 12–15","60 s","slow lower"], cues:"Train both gastroc (straight) and soleus (bent).", prog:"Two-leg → single-leg → add load."},
+   {code:"A6", nm:"Suitcase carry (KB, one side)", spec:["3 × 30–40 m ea","60–90 s"], cues:"Stay tall, ribs down, no shrug.", prog:"Add load and/or distance."},
+  ],
+  finisher:{label:"Core finisher — pick 2 · rest 45–60 s", items:["Pallof press — 3 × 10 ea","Dead bug — 3 × 8 ea","Bird-dog — 3 × 8 ea"]},
+  neck:{label:"Neck finisher — gentle, physio-cleared", note:"Multi-directional neck isometrics — hand-to-head at ~20–30% effort, 5 s holds, 2–3 reps each direction (front, both sides, back). Stop on any symptom."}
+ },
+ SESSION_B:{
+  kind:"strength", title:"Strength B", sub:"Upper · scapula · cuff · core",
+  theme:"Drive from the shoulder blade; never shrug into the neck.",
+  warmup:["Band pull-aparts — 2 × 15","Scapular wall slides — 2 × 10","Pec doorway stretch — 30 s each side"],
+  main:[
+   {code:"B1", nm:"Cable / band row", spec:["3 × 10–12","60–90 s"], cues:"Blade slides back-and-down; no shrug.", prog:"Add load when controlled."},
+   {code:"B2", nm:"Y–T–W raises (light/none)", spec:["2–3 × 10 ea letter","60 s"], cues:"Lower-trap drive; no upper-trap shrug.", prog:"Add light load only once form is clean."},
+   {code:"B3", nm:"Banded external rotation — scapula set", spec:["3 × 12–15 ea","60 s"], cues:"Hold the blade packed; only the forearm rotates; elbow stays in (no winging). Light, slow.", prog:"Increase band tension gradually."},
+   {code:"B4", nm:"Serratus punch + wall slide", spec:["3 × 10","60 s"], cues:"Arm ~120°, punch forward to protract the blade; wall slide trains upward rotation.", prog:"Add reps / range."},
+   {code:"B5", nm:"Scapular pull-ups / active dead hang", spec:["3 × 6–8 (or 15–20 s)","60–90 s"], cues:"Shoulders packed / engaged, not dumped.", prog:"Build hold time / reps."},
+   {code:"B6", nm:"Pec doorway stretch", spec:["2 × 30 s ea"], cues:"Gentle; open the chest.", prog:"—"},
+   {code:"B7", nm:"Landmine / single-arm DB press", badge:"Block 2+", spec:["3 × 8","90 s"], cues:"Start light; the arc unloads the vulnerable top range.", prog:"Introduce only once the pinch has settled; add load slowly."},
+  ],
+  finisher:{label:"Core finisher — pick 2 · rest 45–60 s", items:["Side plank — 3 × 20–40 s ea","Pallof press — 3 × 10 ea","Hollow-body hold — 3 × 15–20 s"]},
+ },
+ CLIMB_POWER:{
+  kind:"climb", title:"Climbing — Power / Limit", sub:"Toward V7+ and crux strength",
+  points:[
+   {h:"Warm-up (mandatory)", t:"10 min general + band pull-aparts + banded external rotation + progressively harder easy problems before anything hard."},
+   {h:"Main", t:"A handful of hard, short boulder attempts (or hard moves on a route) with long 3–5 min rests between efforts. Quality over pump."},
+   {h:"Intensity gate", t:"Steep/overhung lock-offs (esp. left), full-crimp on tiny edges and long dynamic deadpoints stay OFF the menu until ~Week 6, then phase in."},
+   {h:"Shoulder reset", t:"Every ~45–60 min, 4–5 slow scapular pull-ups to re-engage stabilisers."},
+   {h:"Finish", t:"Easy volume for movement quality + 2–3 min antagonist work (push-ups or band external rotation)."},
+   {h:"On-the-wall cues", t:"Engage the blade at rests (don't dead-hang on straight arms); keep the elbow in (no chicken-wing) when pumped."},
+  ]
+ },
+ CLIMB_ENDURANCE:{
+  kind:"climb", title:"Climbing — Endurance", sub:"Toward lead 27–28, trad mileage",
+  points:[
+   {h:"Warm-up", t:"As power day: 10 min general + band pull-aparts + banded external rotation + easy climbing first."},
+   {h:"Main", t:"Sustained, moderate climbing you can keep moving on — laps, 4×4s (four problems, four rounds, minimal rest), or route mileage."},
+   {h:"Skill focus", t:"Drill clipping positions, finding rests / shake-outs on lead; gear-placement flow on trad."},
+   {h:"Reset + finish", t:"Mid-session scapular reset and antagonist finish, same as the power day."},
+  ]
+ },
+ HIKE_WALK:{
+  kind:"hike", title:"Hiking — Base Walk", sub:"Recreation that doubles as training",
+  note:"Progress ONE variable at a time: duration → then pack load → then descent / terrain. Never stack all three in one jump.",
+  byBlock:{
+   1:"Block 1 — duration first: build to a comfortable 3–4 hr walk on real terrain, no / low pack.",
+   2:"Block 2 — add a light pack (~6–8 kg), keep the duration; add ~2 kg per outing.",
+   3:"Block 3 — add long descents + rough / off-camber terrain under the pack, building toward 14 kg; longest loaded descents in Weeks 13–15."
+  }
+ },
+ HIKE_DURABILITY:{
+  kind:"durability", title:"Hike Durability Circuit", sub:"Ankle · foot · hip · 5–8 min, 2–3×/wk",
+  intro:"Tack onto a warm-up or off-day; near-zero equipment.",
+  rows:[
+   ["Ankle","Single-leg balance progression","3 × 30 s ea","Eyes-open → eyes-closed → on cushion. Proprioception = roll-proofing."],
+   ["Ankle","Banded ankle eversion / inversion","2 × 15 ea","Eversion trains peroneals for off-camber ground."],
+   ["Ankle","Ankle alphabet","1 × each foot","Pain-free range."],
+   ["Foot","Calf raises — straight + bent knee","3 × 12–15","Bent-knee hits soleus, the descent / long-plod workhorse."],
+   ["Foot","Short-foot / big-toe press","2 × 10","Dome the arch without curling toes."],
+   ["Hip","Loaded step-up","3 × 8 ea","Same as A1b — the alpine big-step."],
+   ["Hip","Glute-med single-leg control","cue across SL work","No knee cave; holds your line on side-slopes."],
+  ]
+ },
+ MOBILITY:{
+  kind:"mobility", title:"Mobility Flow", sub:"8–10 min · off-days / warm-ups",
+  intro:"Slow, breathe, no forcing.",
+  groups:[
+   ["Ankles","Knee-to-wall dorsiflexion drill + calf / soleus stretch."],
+   ["Hips","90/90 rotations, couch stretch (hip flexor), adductor rock-backs."],
+   ["Thoracic","Open-book, thread-the-needle, cat–cow."],
+  ]
+ },
+ HANGBOARD:{
+  kind:"hangboard", title:"Hangboard — Finger Protocol", sub:"Block 3 only · gated",
+  gate:["In Block 3, and shoulder pinch settled for WEEKS, not days.","Can hold an active, scapula-engaged dead hang for 20+ s pain-free.","Neck / hanging loads cleared with physio (C3). Any neck symptom → stop."],
+  phase1:{h:"Phase 1 — No-hangs / Abrahangs (Weeks 9–12)", t:["Feet stay grounded — lowest shoulder / neck load.","Grips: half-crimp + open-hand only. NEVER full-crimp.","Edge ~20 mm (use 25–35 mm if 20 is hard).","Dose ~3 × 10 s per grip, ~50–60 s rest, sub-maximal (~70–80% of lift-off load).","2–3×/week, low-fatigue; can attach to a climbing-day warm-up.","Keep shoulders packed even with feet down."]},
+  phase2:{h:"Phase 2 — Bodyweight hangs (Weeks 13–16)", t:["Only if the shoulder stays symptom-free after 4+ weeks of Phase 1.","Repeaters (7/3): hang 7 s / rest 3 s × 6 = one set; 3–5 sets; ~3 min between; 20 mm half-crimp / open-hand.","Or Max hangs: 7–10 s near-max; 3–5 min rest; ~3 sets per grip; add weight to progress, not a smaller edge.","Max 2×/week, ≥48 h apart. Shoulders engaged every hang — no dead-hanging off straight arms."]},
+  always:"Always warm up fully first; hangboard fresh and before climbing, never fatigued; deload on the 4th week; log every session (grip, edge, load, RPE).",
+  red:"Red flags → stop & see a professional: finger pop, sharp pain at the base of a finger (pulley), or any neck / shoulder symptom."
+ }
+};
+
+const BENCH_WEEKS=[1,4,8,12,16];
+const BENCH_LABEL={1:"Week 1 — Baseline",4:"Week 4 — End Block 1",8:"Week 8 — End Block 2 + reassessment",12:"Week 12 — End Block 3a",16:"Week 16 — Final"};
+const BENCH_METRICS=[
+ ["stepdown","Eccentric step-down","Max controlled box height + load"],
+ ["balance","Single-leg balance","Eyes-closed hold time (s)"],
+ ["carry","Loaded carry","KB load × distance"],
+ ["pack","Comfortable pack weight","kg carried comfortably on a graded walk (→ 14 kg)"],
+ ["walk","Walk capacity","Duration on terrain (+ pack from Blk 2)"],
+ ["grade","Climbing grade","Boulder + lead working / redpoint grade"],
+ ["pinch","Shoulder pinch","0–10 subjective (target ↓)"],
+ ["neck","Neck status","Settled? Any arm symptoms?"],
+ ["hang","Engaged dead-hang","Pain-free hold (s) — ≥20 s = hangboard gate met"],
+];
+
+const REFERENCE=[
+ {ic:"🪢", t:"Shoulder protocol", body:`<ul>
+   <li>Banded external rotation with scapula set (B3) — anti-winging.</li>
+   <li>Serratus punch + wall slide (B4) — scapular upward rotation.</li>
+   <li>Y–T–W raises (B2) — lower-trap / scapular control.</li>
+   <li>Cable / band row (B1) — mid-back support.</li>
+   <li>Scapular pull-ups / active dead hang (B5) — control under load.</li>
+   <li>Landmine press (B7, Block 2+) — impingement-friendly overhead loading.</li>
+   <li>Mid-climb scapular reset — 4–5 slow scapular pull-ups every 45–60 min.</li>
+   <li><span class="lead">Movement retraining (half the fix)</span>Engage the blade at rests instead of dead-hanging; keep the elbow in (no chicken-wing) when pumped.</li>
+  </ul>`},
+ {ic:"🦵", t:"Knee protocol (patellofemoral)", body:`<ul>
+   <li>Eccentric step-down (A2) — primary descent exercise.</li>
+   <li>Lateral step-down / skater (A3) — multi-planar control.</li>
+   <li>Single-leg RDL (A4) — glute / ham + proprioception.</li>
+   <li>Eccentric calf raises (A5) — protect knee / Achilles on descent.</li>
+   <li>Loaded step-up (A1b) — uphill / big-step strength.</li>
+   <li>Glute-med single-leg control — no-knee-cave cue throughout.</li>
+   <li><span class="lead">Spanish squat / high wall-sit isometric</span>5 × 30–45 s — patellar-tendon resilience, low-irritation quad builder while the knee is sensitive.</li>
+  </ul>`},
+ {ic:"🧠", t:"Neck / C3 disc protocol", body:`<ul>
+   <li>Chin nods (deep neck flexor) — gentle, in warm-up.</li>
+   <li>Multi-directional neck isometrics — 20–30% effort, 5 s holds, 2–3 each direction (a Strength-A finisher).</li>
+   <li class="danger">All neck work gentle, low-effort, physio-cleared. No heavy or end-range neck loading.</li>
+  </ul>
+  <div class="callout"><b>Hard stop:</b> any neck pain referring down the arm, pins / needles, or arm weakness → stop and contact physio.</div>`},
+ {ic:"⛔", t:"Movements to avoid or modify", body:`<ul>
+   <li><span class="lead">Shoulder</span>No dead-hanging on straight arms at rests; no chicken-wing elbow when pumped; no heavy overhead pressing early — drives impingement / cuff overload.</li>
+   <li>If the pinch is worsening week to week → reduce climbing intensity, flag physio.</li>
+   <li><span class="lead">Knee</span>Avoid deep loaded squats / knee far past toes while irritable, and sudden descent-volume spikes. Pain &gt;3/10 during or after → scale back; use a shallow wall-sit instead.</li>
+   <li class="danger"><span class="lead">Neck / C3</span>Avoid heavy / end-range neck loading and big all-lock-off overhung projects + hard whippers when the neck is niggling. The published climbing "neck-strain" protocol is NOT used here — it's left to physio.</li>
+   <li class="danger">Arm pins / needles, numbness or weakness → STOP, contact physio.</li>
+   <li><span class="lead">Fingers</span>No full-crimp on the hangboard; never hangboard fatigued or after climbing.</li>
+  </ul>`},
+ {ic:"📈", t:"Progression & load rules", body:`<ul>
+   <li><span class="lead">General</span>Advance only when the current load is controlled and pain-free at the top of the rep range for 2 sessions.</li>
+   <li>Eccentric step-down: box height 10 → 20 → 30 cm → add load → add controlled speed.</li>
+   <li>Calf raise / SL-RDL / carries: two-leg → single-leg → add load / distance.</li>
+   <li>Hiking pack: +~2 kg per outing; duration → load → descent (one at a time); toward 14 kg by Wk 13–15.</li>
+   <li>Fingers: add load — never shrink the edge to increase difficulty early.</li>
+   <li>Deload every 4th week (Wk 4, 8, 12): same movements, cut working sets & load ~50%, easy climbing.</li>
+   <li>Week 16 = taper: volume −40–50%, keep a little intensity, prioritise rest.</li>
+  </ul>`},
+ {ic:"🩹", t:"The pain rule", body:`<ul>
+   <li>0–3/10 ache that settles within a day is acceptable.</li>
+   <li class="danger">&gt;3/10 during or after, or next-day soreness that lingers = scale that item back.</li>
+   <li class="danger">Any neck pain down the arm, pins / needles, or arm weakness → stop, contact physio.</li>
+  </ul>
+  <div class="callout">This is conditioning guidance, not individual medical advice. The C3 / neck elements stay under your physio's supervision.</div>`},
+];
+
+/* =========================================================
+   STATE  (persisted in this browser via localStorage)
+   ========================================================= */
+const LS='ascent.v1';
+let S = load();
+function load(){ try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}} }
+function save(){ try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){} }
+S.start = S.start || null;          // ISO date string
+S.checks = S.checks || {};          // key -> true
+S.logs = S.logs || {};              // key -> text
+S.done = S.done || {};              // sessionKey -> true
+S.bench = S.bench || {};            // "w1.stepdown" -> text
+
+let viewWeek = null;                // week being viewed (null = follow current)
+
+/* ---- week / day computation ---- */
+function currentWeek(){
+  if(!S.start) return 1;
+  const d=Math.floor((Date.now()-new Date(S.start+'T00:00:00').getTime())/86400000);
+  return Math.min(16,Math.max(1,Math.floor(d/7)+1));
+}
+function todayDow(){ return (new Date().getDay()+6)%7; } // 0=Mon
+function blockOf(wk){ return wk<=4?1:wk<=8?2:wk<=12?3:3; }
+function hikeBlockText(wk){ return SESSIONS.HIKE_WALK.byBlock[ wk<=4?1:wk<=8?2:3 ]; }
+function getWeek(){ return viewWeek||currentWeek(); }
+
+/* ---- key helpers ---- */
+const k=(wk,sess,id)=>`w${wk}.${sess}.${id}`;
+const sk=(wk,sess)=>`w${wk}.${sess}`;
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+function go(tab){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  window.scrollTo(0,0);
+  if(tab==='today') renderToday();
+  if(tab==='plan') renderPlan();
+  if(tab==='log') renderLog();
+  if(tab==='info') renderInfo();
+}
+
+/* =========================================================
+   RIDGE / ELEVATION PROFILE  (the signature element)
+   ========================================================= */
+function ridgeSVG(cur, big){
+  const W=big?460:380, H=big?120:74, padX=8, padTop=14, padBot=18;
+  const max=9, min=2;
+  const xs=i=> padX + i*( (W-padX*2)/15 );
+  const ys=v=> padTop + (1-(v-min)/(max-min))*(H-padTop-padBot);
+  let line='', area='M'+xs(0)+' '+(H-padBot);
+  WEEKS.forEach((w,i)=>{ const x=xs(i),y=ys(w.intensity); line+=(i?' L':'M')+x.toFixed(1)+' '+y.toFixed(1); area+=' L'+x.toFixed(1)+' '+y.toFixed(1); });
+  area+=' L'+xs(15)+' '+(H-padBot)+' Z';
+  // current marker
+  const ci=cur-1, cx=xs(ci), cy=ys(WEEKS[ci].intensity);
+  // ticks for benchmark weeks
+  let ticks='';
+  BENCH_WEEKS.forEach(b=>{ const x=xs(b-1); ticks+=`<line x1="${x}" y1="${H-padBot}" x2="${x}" y2="${H-padBot+4}" stroke="var(--mist-2)" stroke-width="1"/>`; });
+  return `<svg class="ridge-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="${big?'height:120px':''}">
+    <defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--marker)" stop-opacity=".22"/>
+      <stop offset="1" stop-color="var(--marker)" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#rg)"/>
+    <path d="${line}" fill="none" stroke="var(--marker)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="${padX}" y1="${H-padBot}" x2="${W-padX}" y2="${H-padBot}" stroke="var(--line)" stroke-width="1"/>
+    ${ticks}
+    <circle cx="${cx}" cy="${cy}" r="9" fill="var(--marker)" opacity=".18"/>
+    <circle cx="${cx}" cy="${cy}" r="4.5" fill="var(--marker)" stroke="var(--rock)" stroke-width="2"/>
+  </svg>`;
+}
+
+/* =========================================================
+   TODAY VIEW
+   ========================================================= */
+function renderToday(){
+  const cur=currentWeek(), wk=getWeek(), w=WEEKS[wk-1], isCur=(wk===cur);
+  let h='';
+
+  // header
+  h+=`<div class="ridge-wrap">
+    <div class="ridge-eyebrow"><span>Ascent · 16-week build</span><span><b>${isCur?'This week':'Viewing'}</b></span></div>
+    ${ridgeSVG(wk,false)}
+    <div class="wk-title">
+      <span class="wk-num">${wk}</span>
+      <span class="wk-block ${w.deload?'deload':''}">${w.kind?w.kind+' · ':''}${w.block}</span>
+    </div>
+    <div class="wk-goal">${blockGoalShort(w.block)}</div>
+  </div>`;
+
+  // week chips
+  h+=`<div class="chips" id="chips">`;
+  WEEKS.forEach(x=>{
+    h+=`<button class="chip ${x.n===wk?'cur':''} ${x.n===cur&&x.n!==wk?'today-ring':''}" onclick="pickWeek(${x.n})">${x.n}${x.deload?'<span class="notch"></span>':''}</button>`;
+  });
+  h+=`</div>`;
+
+  // setup prompt
+  if(!S.start){
+    h+=`<div class="setup">
+      <p>Set the Monday you start Week 1 and the app will track which week you're in automatically.</p>
+      <div class="row"><input type="date" id="startInput"><button onclick="setStart()">Start</button></div>
+    </div>`;
+  }
+
+  // banners
+  if(w.deload) h+=`<div class="banner deload"><span class="ic">▼</span><div><b>${w.kind} week.</b> Same movements, but cut working sets &amp; load ~50% and keep climbing to easy volume. This is where adaptation consolidates — non-negotiable given the disc &amp; shoulder history.</div></div>`;
+  if(w.checkin) h+=`<div class="banner bench"><span class="ic">◎</span><div><b>Check-in:</b> ${w.checkin}. ${BENCH_WEEKS.includes(wk)?'Log it in the <b>Log</b> tab.':''}</div></div>`;
+
+  // this-week stats
+  h+=`<div class="stats">
+    <div class="stat"><div class="k">Strength load</div><div class="v">${w.load}</div></div>
+    <div class="stat"><div class="k">Climbing</div><div class="v">${w.climb}</div></div>
+    <div class="stat wide"><div class="k">Hiking task</div><div class="v">${w.hike}</div></div>
+    ${w.hangboard!=='—'?`<div class="stat wide"><div class="k">Hangboard</div><div class="v">${w.hangboard}</div></div>`:''}
+  </div>`;
+
+  // days
+  h+=`<div class="slabel">Week ${wk} · sessions</div>`;
+  DAYS.forEach((d,i)=>{
+    const isToday = isCur && i===todayDow();
+    const sess=SESSIONS[d.session];
+    let sub, prog='';
+    if(d.type==='rest'){
+      sub = d.restLabel || 'Rest + mobility';
+      if(d.extra) sub='Rest · mobility + durability circuit';
+    } else if(d.type==='hike'){
+      sub='Base walk · '+hikeShort(wk);
+    } else {
+      sub=sess.sub;
+    }
+    // progress for strength sessions
+    if(d.type==='strength'){
+      const done=S.done[sk(wk,d.session)];
+      const total=sess.main.length;
+      const ticked=sess.main.filter(m=>S.checks[k(wk,d.session,m.code)]).length;
+      prog = `<span class="prog ${done?'done':''}">${done?'✓ done':ticked+'/'+total}</span>`;
+    }
+    h+=`<button class="day ${isToday?'today':''} ${d.type==='rest'?'rest':''}" onclick="openSession('${d.session}',${wk})">
+      <span class="dow">${d.dow}</span>
+      <span class="dot ${d.type}"></span>
+      <span class="body"><span class="type">${d.type==='rest'?'Rest':sess.title.replace('Climbing — ','Climb · ')}</span><span class="sub">${sub}</span></span>
+      ${prog}
+    </button>`;
+  });
+
+  // hangboard surface (block 3)
+  if(wk>=9){
+    h+=`<div class="slabel">Finger work</div>
+    <button class="hb-card" onclick="openSession('HANGBOARD',${wk})">
+      <span class="dot climb"></span>
+      <span class="body"><span class="type">Hangboard — ${wk<=12?'Phase 1 no-hangs':'Phase 2 hangs'}</span><span class="sub">Gated · attach to a climbing-day warm-up, fresh</span></span>
+      <span class="prog">view gate ›</span>
+    </button>`;
+  }
+
+  h+=`<div class="backup-row">
+      <button class="backup-btn" onclick="exportData()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Back up</button>
+      <button class="backup-btn" onclick="document.getElementById('importFile').click()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg>Restore</button>
+    </div>
+    <div class="foot-note">Progress saves on this device. Back up to a file before switching phones or clearing your browser.<br>
+    <button onclick="if(confirm('Reset all progress, logs and benchmarks on this device?')){localStorage.removeItem(LS);location.reload();}">Reset all data</button></div>`;
+
+  document.getElementById('view-today').innerHTML=h;
+}
+function blockGoalShort(b){
+  return {Foundation:"Groove patterns, settle the shoulder & neck, build a base.",
+    Build:"Add strength & intensity; phase hard moves back in.",
+    Transfer:"Make it sport-specific — heavier, loaded, project intent.",
+    Peak:"Peak then taper for the objective.",
+    Taper:"Light, sharp, fresh — rest before the objective."}[b];
+}
+function hikeShort(wk){ return WEEKS[wk-1].hike; }
+function pickWeek(n){ viewWeek=(n===currentWeek())?null:n; renderToday(); }
+function setStart(){
+  const v=document.getElementById('startInput').value;
+  if(!v){alert('Pick a date first.');return;}
+  S.start=v; save(); viewWeek=null; renderToday();
+}
+
+/* =========================================================
+   SESSION SHEET
+   ========================================================= */
+let sheetCtx=null;
+function openSession(id,wk){
+  const s=SESSIONS[id]; sheetCtx={id,wk};
+  document.getElementById('sheetKicker').textContent = `Week ${wk}${WEEKS[wk-1].deload?' · '+WEEKS[wk-1].kind:''}`;
+  document.getElementById('sheetTitle').textContent = s.title;
+  document.getElementById('sheetBody').innerHTML = renderSessionBody(s,id,wk);
+  const foot=document.getElementById('completeBtn');
+  if(s.kind==='strength'||s.kind==='climb'){
+    foot.style.display='block';
+    refreshComplete();
+    foot.onclick=()=>toggleComplete();
+  } else { foot.style.display='none'; }
+  document.getElementById('scrim').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+  document.body.style.overflow='hidden';
+  document.getElementById('sheetBody').scrollTop=0;
+}
+function closeSheet(){
+  document.getElementById('scrim').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+  document.body.style.overflow='';
+  if(['today'].includes(curTab())) renderToday();
+}
+function curTab(){ return document.querySelector('.tab.active').dataset.tab; }
+
+function renderSessionBody(s,id,wk){
+  if(s.kind==='strength') return strengthBody(s,id,wk);
+  if(s.kind==='climb') return climbBody(s,id,wk);
+  if(s.kind==='hike') return hikeBody(s,wk);
+  if(s.kind==='durability') return durabilityBody(s);
+  if(s.kind==='mobility') return mobilityBody(s);
+  if(s.kind==='hangboard') return hangboardBody(s,wk);
+  return '';
+}
+
+function strengthBody(s,id,wk){
+  let h='';
+  if(s.theme) h+=`<div class="callout" style="margin-bottom:6px">${s.theme}</div>`;
+  h+=`<div class="subhd">Warm-up · 6–8 min</div>`;
+  s.warmup.forEach((w,i)=>{
+    const key=k(wk,id,'wu'+i), on=S.checks[key];
+    h+=checkRow(key,w,on);
+  });
+  h+=`<div class="subhd">Main</div>`;
+  s.main.forEach(m=>{
+    const key=k(wk,id,m.code), on=S.checks[key];
+    const lkey=k(wk,id,m.code);
+    h+=`<div class="ex ${on?'on':''}">
+      <button class="ex-top" onclick="toggleCheck('${key}',this)">
+        <span class="box">${CHECK_SVG}</span>
+        <span class="ex-main">
+          <span class="code">${m.code}</span>
+          <span class="nm">${m.nm}${m.badge?`<span class="badge">${m.badge}</span>`:''}</span>
+          <span class="ex-spec">${m.spec.map((sp,si)=>specChip(sp)).join('')}</span>
+        </span>
+      </button>
+      <div class="ex-more">
+        <div class="row"><b>Cues</b><br>${m.cues}</div>
+        <div class="row"><b>Progress</b><br>${m.prog}</div>
+        <label class="loglbl">Your log — load / reps / RPE</label>
+        <input class="loginput" placeholder="e.g. 20 kg × 10, RPE 7" value="${(S.logs[lkey]||'').replace(/"/g,'&quot;')}" oninput="saveLog('${lkey}',this.value)">
+      </div>
+    </div>`;
+  });
+  // finisher
+  h+=`<div class="subhd">${s.finisher.label}</div>`;
+  s.finisher.items.forEach((it,i)=>{ const key=k(wk,id,'fin'+i); h+=checkRow(key,it,S.checks[key]); });
+  // neck
+  if(s.neck){
+    h+=`<div class="subhd">${s.neck.label}</div><div class="prose"><p>${s.neck.note}</p></div>`;
+  }
+  return h;
+}
+function specChip(sp){
+  // make rest values tappable timers (contain "s" and a number, but not reps like "8–10")
+  const m=sp.match(/^(\d+)(?:–(\d+))?\s*s$/);
+  if(/^\d/.test(sp) && /s$/.test(sp.trim()) && (sp.includes('60')||sp.includes('90')||sp.includes('120')||sp.includes('45'))){
+    // rest duration chip
+    const secs=parseInt(sp); 
+    return `<span class="spec rest-btn" onclick="event.stopPropagation();startTimer(${secs},'${sp}')">⏱ ${sp}</span>`;
+  }
+  return `<span class="spec">${sp}</span>`;
+}
+function checkRow(key,txt,on){
+  // pull a trailing "— N × M"/reps into a mono accent
+  let label=txt.replace(/—\s*([0-9].*)$/,(_,r)=>` — <span class="reps">${r}</span>`);
+  return `<button class="check ${on?'on':''}" onclick="toggleCheck('${key}',this)">
+    <span class="box">${CHECK_SVG}</span><span class="txt">${label}</span></button>`;
+}
+function climbBody(s,id,wk){
+  let h=`<div class="prose" style="margin-bottom:4px">${SESSIONS[id].sub}</div>`;
+  s.points.forEach((p,i)=>{
+    const key=k(wk,id,'p'+i), on=S.checks[key];
+    h+=`<button class="check ${on?'on':''}" onclick="toggleCheck('${key}',this)" style="align-items:flex-start">
+      <span class="box">${CHECK_SVG}</span>
+      <span class="txt"><b style="font-family:var(--display)">${p.h}</b><br><span style="color:var(--mist);font-size:13px">${p.t}</span></span>
+    </button>`;
+  });
+  return h;
+}
+function hikeBody(s,wk){
+  return `<div class="prose">
+    <div class="callout" style="background:var(--marker-soft);border-color:rgba(232,116,59,.35);color:#f0b48f">${s.note}</div>
+    <div class="subhd">This week (Week ${wk})</div>
+    <p style="font-size:15px;color:var(--granite)">${hikeBlockText(wk)}</p>
+    <div class="subhd">The whole arc</div>
+    <p><b>Block 1</b> — ${s.byBlock[1]}</p>
+    <p><b>Block 2</b> — ${s.byBlock[2]}</p>
+    <p><b>Block 3</b> — ${s.byBlock[3]}</p>
+  </div>`;
+}
+function durabilityBody(s){
+  let h=`<div class="prose"><p>${s.intro}</p></div>`;
+  s.rows.forEach(r=>{
+    h+=`<div class="ex" style="cursor:default"><div class="ex-top" style="cursor:default">
+      <span class="ex-main"><span class="code">${r[0].toUpperCase()}</span><span class="nm">${r[1]}</span>
+      <span class="ex-spec">${specChip(r[2])}</span>
+      <div class="ex-more" style="padding:8px 0 0 0;color:var(--mist)">${r[3]}</div></span>
+    </div></div>`;
+  });
+  return h;
+}
+function mobilityBody(s){
+  let h=`<div class="prose"><p>${s.intro}</p></div>`;
+  s.groups.forEach(g=>{ h+=`<div class="prose"><p><b>${g[0]}</b> — ${g[1]}</p></div>`; });
+  return h;
+}
+function hangboardBody(s,wk){
+  const phase = wk<=12 ? s.phase1 : s.phase2;
+  let h=`<div class="callout" style="margin-bottom:4px"><b>Gate — all must be true before starting:</b></div>`;
+  s.gate.forEach(g=>{ h+=`<div class="prose"><p>· ${g}</p></div>`; });
+  h+=`<div class="subhd">${phase.h}</div>`;
+  phase.t.forEach(t=>{ h+=`<div class="prose"><p>· ${t}</p></div>`; });
+  h+=`<div class="subhd">Always</div><div class="prose"><p>${s.always}</p></div>`;
+  h+=`<div class="callout" style="margin-top:12px;background:rgba(232,116,59,.14)"><b>Red flags:</b> ${s.red}</div>`;
+  return h;
+}
+
+/* checks / logs / complete */
+function toggleCheck(key,el){
+  S.checks[key]=!S.checks[key]; if(!S.checks[key]) delete S.checks[key]; save();
+  el.classList.toggle('on',!!S.checks[key]);
+  // also toggle parent .ex if present
+  const ex=el.closest('.ex'); if(ex) ex.classList.toggle('on',!!S.checks[key]);
+}
+function saveLog(key,val){ if(val) S.logs[key]=val; else delete S.logs[key]; save(); }
+function refreshComplete(){
+  const {id,wk}=sheetCtx; const done=S.done[sk(wk,id)];
+  const b=document.getElementById('completeBtn');
+  b.classList.toggle('done',!!done);
+  b.textContent = done ? '✓ Session complete' : 'Mark session complete';
+}
+function toggleComplete(){
+  const {id,wk}=sheetCtx; const key=sk(wk,id);
+  S.done[key]=!S.done[key]; if(!S.done[key]) delete S.done[key]; save();
+  refreshComplete();
+}
+
+/* =========================================================
+   REST TIMER
+   ========================================================= */
+let timerInt=null, timerLeft=0;
+function startTimer(secs){
+  stopTimer(); timerLeft=secs; showTimer();
+  timerInt=setInterval(()=>{
+    timerLeft--; updTimer();
+    if(timerLeft<=0){ clearInterval(timerInt); beep(); document.getElementById('timerT').textContent='Go'; setTimeout(stopTimer,2500); }
+  },1000);
+}
+function updTimer(){ const m=Math.floor(timerLeft/60),s=timerLeft%60; document.getElementById('timerT').textContent=m+':'+String(s).padStart(2,'0'); }
+function showTimer(){ updTimer(); document.getElementById('timer').classList.add('show'); }
+function stopTimer(){ if(timerInt)clearInterval(timerInt); document.getElementById('timer').classList.remove('show'); }
+function beep(){ try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.15;o.start();setTimeout(()=>{o.stop();c.close();},350);}catch(e){} }
+
+/* =========================================================
+   PLAN VIEW
+   ========================================================= */
+function renderPlan(){
+  const cur=currentWeek();
+  let h=`<div class="plan-hd"><h1>The ascent</h1><p>16 weeks · four mesocycles · three blocks. Intensity climbs, dips at each deload, summits at Weeks 13–15, then tapers.</p></div>
+  <div class="bigridge">${ridgeSVG(cur,true)}</div>`;
+  BLOCKS.forEach(b=>{
+    h+=`<div class="block"><div class="block-hd"><span class="nm">${b.nm}</span><span class="wks">${b.wks}</span></div>
+      <div class="block-goal">${b.goal}</div>`;
+    b.weeks.forEach(wn=>{
+      const w=WEEKS[wn-1];
+      h+=`<button class="miniwk ${w.deload?'dl':''}" onclick="jumpWeek(${wn})">
+        <span class="w">${wn}</span>
+        <span class="d">${w.deload?w.kind:w.load.split(' · ')[0]} · ${w.climb.split(' (')[0]}</span>
+        ${w.checkin?'<span class="tag">check-in</span>':(w.deload?'<span class="tag">'+w.kind.toLowerCase()+'</span>':'')}
+      </button>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`<div class="foot-note">Tap a week to open it on the Today screen.</div>`;
+  document.getElementById('view-plan').innerHTML=h;
+}
+function jumpWeek(n){ viewWeek=(n===currentWeek())?null:n; go('today'); }
+
+/* =========================================================
+   LOG VIEW (benchmarks)
+   ========================================================= */
+function renderLog(){
+  const cur=currentWeek();
+  let h=`<div class="doc"><h1>Benchmarks</h1><p>Record these at Weeks 1, 4, 8, 12 and 16 and watch the trend. Most should rise; shoulder pinch should fall; any arm symptom is a red-flag stop.</p></div>`;
+  BENCH_WEEKS.forEach(bw=>{
+    const filled=BENCH_METRICS.filter(m=>S.bench['w'+bw+'.'+m[0]]).length;
+    const isNow = bw===cur;
+    h+=`<div class="bench-card ${isNow?'open':''}">
+      <button class="bench-hd" onclick="this.parentElement.classList.toggle('open')">
+        <span class="w">${BENCH_LABEL[bw]}</span>
+        <span class="st ${filled===BENCH_METRICS.length?'done':''}">${filled}/${BENCH_METRICS.length}${isNow?' · now':''}</span>
+      </button>
+      <div class="bench-body">`;
+    BENCH_METRICS.forEach(m=>{
+      const key='w'+bw+'.'+m[0];
+      h+=`<div class="bfield"><label><b>${m[1]}</b> — ${m[2]}</label>
+        <input value="${(S.bench[key]||'').replace(/"/g,'&quot;')}" placeholder="record…" oninput="saveBench('${key}',this.value)"></div>`;
+    });
+    h+=`</div></div>`;
+  });
+  h+=`<div class="foot-note">Entries save on this device.</div>`;
+  document.getElementById('view-log').innerHTML=h;
+}
+function saveBench(key,val){ if(val) S.bench[key]=val; else delete S.bench[key]; save(); }
+
+/* =========================================================
+   INFO VIEW (protocols / safety)
+   ========================================================= */
+function renderInfo(){
+  let h=`<div class="doc"><h1>Protocols</h1><p>Your shoulder, knee and neck guidance, the movements to avoid, and the rules that govern progression. One tap away during any session.</p></div>`;
+  REFERENCE.forEach((r,i)=>{
+    h+=`<div class="acc ${i===0?'open':''}">
+      <button class="acc-hd" onclick="this.parentElement.classList.toggle('open')">
+        <span class="icon-emoji">${r.ic}</span><span class="ttl">${r.t}</span>
+        <span class="chev">›</span>
+      </button>
+      <div class="acc-body">${r.body}</div>
+    </div>`;
+  });
+  h+=`<div class="foot-note">Conditioning guidance, not individual medical advice. The C3 / neck elements stay under your physio's supervision.</div>`;
+  document.getElementById('view-info').innerHTML=h;
+}
+
+/* =========================================================
+   BACK UP / RESTORE
+   ========================================================= */
+function exportData(){
+  try{
+    const payload={_app:'ascent',_v:1,_exported:new Date().toISOString(),data:S};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='ascent-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1500);
+  }catch(e){ alert('Could not create a backup file.'); }
+}
+function importData(input){
+  const f=input.files&&input.files[0]; input.value='';
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      let parsed=JSON.parse(r.result);
+      let d = (parsed && parsed.data) ? parsed.data : parsed;        // accept wrapped or raw
+      if(typeof d!=='object'||d===null) throw 0;
+      const merged=Object.assign({start:null,checks:{},logs:{},done:{},bench:{}}, d);
+      if(!confirm('Restore this backup? It will replace the progress currently on this device.')) return;
+      S=merged; save();
+      alert('Restored. Your progress is loaded.');
+      location.reload();
+    }catch(e){ alert('That file is not a valid Ascent backup.'); }
+  };
+  r.onerror=()=>alert('Could not read that file.');
+  r.readAsText(f);
+}
+
+/* boot */
+renderToday();
+
+/* register service worker for offline use (only works when hosted over http/https) */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+</script>
+</body>
+</html>
